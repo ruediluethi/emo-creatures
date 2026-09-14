@@ -1,6 +1,8 @@
 import { useState } from "react";
 import Game from "./components/Game.jsx";
 
+export const API_BASE = import.meta.env.DEV ? "http://127.0.0.1:8000" : "";
+
 export default function App() {
   const [playerName, setPlayerName] = useState("");
   const [gameId, setGameId] = useState(null);
@@ -19,10 +21,10 @@ export default function App() {
     setIsLoading(true);
     setError("");
 
-    const API_BASE = import.meta.env.DEV ? "http://127.0.0.1:8000" : "";
+    
 
     try {
-      const response = await fetch(`${API_BASE}/new_game`, {
+      const response = await fetch(`${API_BASE}/game/new`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

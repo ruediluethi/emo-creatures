@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DndContext, PointerSensor, TouchSensor, useSensor, useSensors, DragOverlay, pointerWithin } from "@dnd-kit/core";
 import Hand from "./Hand.jsx";
 import Field from "./Field.jsx";
@@ -7,6 +7,33 @@ import DeckButton from "./DeckButton.jsx";
 import DebugAddOpponentCardButton from "./DebugAddOpponentCardButton.jsx";
 import CardFace from "./CardFace.jsx";
 import { drawRandomCard } from "../data/cardTemplates.js";
+import { API_BASE } from "../App.jsx";
+
+
+async function fetchAction(gameId, action) {
+	try {
+		const response = await fetch(`${API_BASE}/game/${gameId}/${action}`);
+		if (!response.ok) {
+			throw new Error("Failed to fetch hand");
+		}
+		const data = await response.json();
+		return [
+			(data.hand ?? []).map((card) => ({ 
+				id: card.instance_id,
+				name: card.name,
+				imageUrl: `/media/cards/${card.index.toString().padStart(3, "0")}_${card.name}.png`,
+			})),
+			(data.field ?? []).map((creature) => ({ 
+				id: creature.instance_id,
+				name: creature.card_template.name,
+				imageUrl: `/media/cards/${creature.card_template.index.toString().padStart(3, "0")}_${creature.card_template.name}.png`,
+			})),
+		];
+	} catch (err) {
+		console.error(err);
+	}
+}
+
 
 /**
  * Zwei unterschiedliche Drag-Quellen, unterschieden über
@@ -25,73 +52,93 @@ import { drawRandomCard } from "../data/cardTemplates.js";
  * Regelauswertung kommt später vom Server.
  */
 export default function Game({ gameId, playerName }) {
-  const [hand, setHand] = useState(() => [drawRandomCard(), drawRandomCard(), drawRandomCard()]);
-  const [field, setField] = useState([]);
-  const [opponentField, setOpponentField] = useState([]);
+	// const [hand, setHand] = useState(() => [drawRandomCard(), drawRandomCard(), drawRandomCard()]);
+	const [hand, setHand] = useState([]);
+	const [field, setField] = useState([]);
+	const [opponentField, setOpponentField] = useState([]);
 
-  const [activeCard, setActiveCard] = useState(null);
-  const [activeSource, setActiveSource] = useState(null); // "handCard" | "playerFieldCard"
-  const [isOverField, setIsOverField] = useState(false);
-  const [isOverOpponentCard, setIsOverOpponentCard] = useState(false);
+	useEffect(() => {
+		fetchAction(gameId, "hand").then(([hand, field]) => {
+			setHand(hand);
+			setField(field);
+		});
+	}, [gameId]);
 
-  // Transiente visuelle Angriffs-Rückmeldung, nicht Teil des
-  // eigentlichen Spielzustands — läuft nach kurzer Zeit automatisch ab.
-  const [attackFlash, setAttackFlash] = useState(null); // { attackerId, targetId }
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 8 } })
-  );
+	const [activeCard, setActiveCard] = useState(null);
+	const [activeSource, setActiveSource] = useState(null); // "handCard" | "playerFieldCard"
+	const [isOverField, setIsOverField] = useState(false);
+	const [isOverOpponentCard, setIsOverOpponentCard] = useState(false);
 
-  const handleDraw = () => {
-    setHand((prev) => [...prev, drawRandomCard()]);
-  };
 
-  const handleDebugAddOpponentCard = () => {
-    setOpponentField((prev) => [...prev, drawRandomCard()]);
-  };
 
-  const handleDragStart = (event) => {
-    const { type, card } = event.active.data.current ?? {};
-    setActiveCard(card ?? null);
-    setActiveSource(type ?? null);
-  };
+	// Transiente visuelle Angriffs-Rückmeldung, nicht Teil des
+	// eigentlichen Spielzustands — läuft nach kurzer Zeit automatisch ab.
+	const [attackFlash, setAttackFlash] = useState(null); // { attackerId, targetId }
 
-  // Vorschau am Feld-Ende gilt nur beim Spielen einer Handkarte, nicht
-  // beim Angreifen (sonst würde sie kurz aufblitzen, während man mit
-  // einer Feldkarte über das eigene Feld startet).
-  const handleDragOver = (event) => {
-    setIsOverOpponentCard(event.over?.id?.startsWith("opponent-card") ?? false);
-    if (activeSource !== "handCard") {
-      setIsOverField(false);
-      return;
-    }
-    setIsOverField(event.over?.id === "field");
-  };
+	const sensors = useSensors(
+		useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+		useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 8 } })
+	);
 
-  const handleDragEnd = (event) => {
-    const { active, over } = event;
-    const source = activeSource;
-    setActiveCard(null);
-    setActiveSource(null);
-    setIsOverField(false);
+	const handleDraw = () => {
+		fetchAction(gameId, "draw").then(([hand, field]) => {
+			setHand(hand);
+			setField(field);
+		});
+	};
 
-    if (!over) return;
+	const handleDebugAddOpponentCard = () => {
+		setOpponentField((prev) => [...prev, drawRandomCard()]);
+	};
 
-    if (source === "handCard" && over.id === "field") {
-      const card = hand.find((c) => c.id === active.id);
-      if (!card) return;
-      setHand((prev) => prev.filter((c) => c.id !== active.id));
-      setField((prev) => [...prev, card]);
-      return;
-    }
+	const handleDragStart = (event) => {
+		const { type, card } = event.active.data.current ?? {};
+		setActiveCard(card ?? null);
+		setActiveSource(type ?? null);
+	};
 
-    if (source === "playerFieldCard" && over.data.current?.type === "opponentCreature") {
-      const targetId = over.data.current.card.id;
-      setAttackFlash({ attackerId: active.id, targetId });
-      window.setTimeout(() => setAttackFlash(null), 320);
-    }
-  };
+	// Vorschau am Feld-Ende gilt nur beim Spielen einer Handkarte, nicht
+	// beim Angreifen (sonst würde sie kurz aufblitzen, während man mit
+	// einer Feldkarte über das eigene Feld startet).
+	const handleDragOver = (event) => {
+		setIsOverOpponentCard(event.over?.id?.startsWith("opponent-card") ?? false);
+		if (activeSource !== "handCard") {
+			setIsOverField(false);
+			return;
+		}
+		setIsOverField(event.over?.id === "field");
+	};
+
+	const handleDragEnd = (event) => {
+		const { active, over } = event;
+		const source = activeSource;
+		setActiveCard(null);
+		setActiveSource(null);
+		setIsOverField(false);
+
+		if (!over) return;
+
+		if (source === "handCard" && over.id === "field") {
+			const card = hand.find((c) => c.id === active.id);
+			if (!card) return;
+			// set it hard first
+			setHand((prev) => prev.filter((c) => c.id !== active.id));
+			setField((prev) => [...prev, card]);
+			// then update the server asynchronously
+			fetchAction(gameId, "play-creature/" + card.id).then(([hand, field]) => {
+				setHand(hand);
+				setField(field);
+			});
+			return;
+		}
+
+		if (source === "playerFieldCard" && over.data.current?.type === "opponentCreature") {
+			const targetId = over.data.current.card.id;
+			setAttackFlash({ attackerId: active.id, targetId });
+			window.setTimeout(() => setAttackFlash(null), 320);
+		}
+	};
 
 	return (
 		<>
@@ -145,10 +192,10 @@ export default function Game({ gameId, playerName }) {
 			<DragOverlay dropAnimation={null}>
 			{activeCard ? (
 				<CardFace
-				card={activeCard}
-				isDragging={true}
-				isOverOpponentCard={isOverOpponentCard}
-				//   className={`shadow-2xl ring-2 ${activeSource === "playerFieldCard" ? "ring-red-400/50" : "ring-white/30"}`}
+					card={activeCard}
+					isDragging={true}
+					isOverOpponentCard={isOverOpponentCard}
+					//   className={`shadow-2xl ring-2 ${activeSource === "playerFieldCard" ? "ring-red-400/50" : "ring-white/30"}`}
 				/>
 			) : null}
 			</DragOverlay>
