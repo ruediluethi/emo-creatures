@@ -1,0 +1,7 @@
+services:
+  emo-creatures:
+    image: ruediluethi/emo-creatures:latest
+    container_name: emo-creatures
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
