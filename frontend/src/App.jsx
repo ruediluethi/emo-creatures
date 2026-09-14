@@ -19,8 +19,10 @@ export default function App() {
     setIsLoading(true);
     setError("");
 
+    const API_BASE = import.meta.env.DEV ? "http://127.0.0.1:8000" : "";
+
     try {
-      const response = await fetch("http://127.0.0.1:8000/new_game", {
+      const response = await fetch(`${API_BASE}/new_game`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

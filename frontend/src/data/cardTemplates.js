@@ -58,6 +58,6 @@ export function drawRandomCard() {
   return {
     id: nextId(),
     name: template.name,
-    imageUrl: `/cards/${template.filename}`,
+    imageUrl: `/media/cards/${template.filename}`,
   };
 }
