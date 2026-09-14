@@ -1,0 +1,194 @@
+[{
+    "index": 1,
+    "name": "Kruggler",
+    "type": ["gelangweilt", "wuetend"],
+    "defense": 2,
+    "imageMultiply": true,
+    "attacks": [
+        {
+            "name": "Grummler",
+            "type": "gelangweilt",
+            "damage": 1,
+            "energy": 0,
+            "advantage": 1
+        },
+        {
+            "name": "Stampfer",
+            "type": "wuetend",
+            "damage": 2,
+            "energy": 2,
+            "advantage": 1
+        }
+    ]
+},{
+    "index": 2,
+    "name": "Robi",
+    "type": ["neutral_ungluecklich"],
+    "defense": 2,
+    "attacks": [
+        {
+            "name": "Blitz",
+            "type": "neutral_ungluecklich",
+            "damage": 1,
+            "energy": 0,
+            "advantage": 0
+        },
+        {
+            "name": "Elektroshock",
+            "type": "neutral_ungluecklich",
+            "damage": 2,
+            "energy": 1,
+            "advantage": 0
+        }
+    ],
+    "evolution": [
+        {
+            "index": 2,
+            "name": "Robi"
+        },
+        {
+            "index": 3,
+            "name": "Robo"
+        }
+    ]
+},{
+    "index": 3,
+    "name": "Robo",
+    "type": ["neutral_gluecklich"],
+    "defense": 3,
+    "attacks": [
+        {
+            "name": "Funken",
+            "type": "neutral_gluecklich",
+            "damage": 2,
+            "energy": 0,
+            "advantage": 0
+        },
+        {
+            "name": "Lichtbogen",
+            "type": "neutral_gluecklich",
+            "damage": 4,
+            "energy": 2,
+            "advantage": 0
+        }
+    ],
+    "evolution": [
+        {
+            "index": 2,
+            "name": "Robi"
+        },
+        {
+            "index": 3,
+            "name": "Robo"
+        }
+    ]
+},{
+    "index": 4,
+    "name": "Robella",
+    "type": ["neutral_gluecklich"],
+    "defense": 2,
+    "attacks": [
+        {
+            "name": "Funken",
+            "type": "neutral_gluecklich",
+            "damage": 2,
+            "energy": 0,
+            "advantage": 0
+        },
+        {
+            "name": "Lichtbogen",
+            "type": "neutral_gluecklich",
+            "damage": 3,
+            "energy": 2,
+            "advantage": 0
+        }
+    ]
+},{
+    "index": 5,
+    "name": "Regelwurm",
+    "type": ["gluecklich"],
+    "defense": 1,
+    "imageMultiply": true,
+    "attacks": [
+        {
+            "name": "Walzer",
+            "type": "gluecklich",
+            "damage": 1,
+            "energy": 0,
+            "advantage": 1
+        },
+        {
+            "name": "Tanzer",
+            "type": "gluecklich",
+            "damage": 2,
+            "energy": 1,
+            "advantage": 1
+        }
+    ]
+},{
+    "index": 6,
+    "name": "Spinfli",
+    "type": ["angeekelt", "ueberrascht"],
+    "defense": 1,
+    "imageMultiply": true,
+    "attacks": [
+        {
+            "name": "Flügelschlag",
+            "type": "angeekelt",
+            "damage": 1,
+            "energy": 0,
+            "advantage": 1
+        },
+        {
+            "name": "Schlecker",
+            "type": "ueberrascht",
+            "damage": 2,
+            "energy": 1,
+            "advantage": 1
+        }
+    ]
+},{
+    "index": 7,
+    "name": "Schleggach",
+    "type": ["angeekelt", "gluecklich"],
+    "defense": 1,
+    "imageMultiply": true,
+    "attacks": [
+        {
+            "name": "Schlecker",
+            "type": "angeekelt",
+            "damage": 1,
+            "energy": 0,
+            "advantage": 1
+        },
+        {
+            "name": "Lechzer",
+            "type": "gluecklich",
+            "damage": 2,
+            "energy": 1,
+            "advantage": 1
+        }
+    ]
+},{
+    "index": 8,
+    "name": "Samtange",
+    "type": ["aengstlich"],
+    "defense": 1,
+    "imageMultiply": true,
+    "attacks": [
+        {
+            "name": "Beißer",
+            "type": "aengstlich",
+            "damage": 1,
+            "energy": 0,
+            "advantage": 1
+        },
+        {
+            "name": "Stampfer",
+            "type": "aengstlich",
+            "damage": 2,
+            "energy": 1,
+            "advantage": 1
+        }
+    ]
+}]
