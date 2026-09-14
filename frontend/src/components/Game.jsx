@@ -113,7 +113,7 @@ export default function Game({ gameId, playerName }) {
 		>
 			<div className="relative flex h-screen w-full flex-col overflow-hidden bg-[radial-gradient(ellipse_at_50%_50%,_#e2e2e2_0%,_#e2e2e2_50%,_#a5a5a5_100%)] text-white">
 				{/* Gegnerbereich */}
-				<div className="flex flex-1 flex-col items-center justify-end gap-3 pb-6 pt-4">
+				<div className="flex h-2/5 min-h-0 flex-col items-center justify-end gap-3 overflow-hidden pb-6">
 					<OpponentField cards={opponentField} hitCardId={attackFlash?.targetId ?? null} />
 				</div>
 
@@ -121,20 +121,20 @@ export default function Game({ gameId, playerName }) {
 				<div className="relative h-[3px] w-full shrink-0 bg-gradient-to-r from-transparent via-white/100 to-transparent" />
 
 				{/* Spielerbereich */}
-				<div className="flex flex-[1.3] flex-col items-center justify-between pb-2 pt-8">
+				<div className="flex h-3/5 min-h-0 flex-col items-center justify-start overflow-hidden pt-8">
 					<Field
 						cards={field}
 						previewCard={isOverField ? activeCard : null}
 						attackingCardId={attackFlash?.attackerId ?? null}
 					/>
-
-					
 				</div>
 			</div>
 
 			{/* hand karten */}
-			<div className="fixed bottom-0 left-1/2 z-20 flex -translate-x-1/2 items-end justify-center gap-6 px-6 pb-1">
-				<Hand cards={hand} />
+			<div className="fixed bottom-0 left-0 z-20 flex w-full items-end justify-between gap-6 px-3 py-3">
+				<div className="flex items-end justify-start">
+					<Hand cards={hand} />
+				</div>
 				<DeckButton onDraw={handleDraw} />
 			</div>
 

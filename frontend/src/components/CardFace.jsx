@@ -28,7 +28,7 @@ export default function CardFace({
 					: "0 10px 15px -3px rgba(0,0,0,0.1)"
 				),
 			transition: "box-shadow 120ms ease, background-color 120ms ease",
-			backgroundColor: isOverOpponentCard ? "rgb(192, 15, 34)" : "white",
+			backgroundColor: isOverOpponentCard ? "rgb(192, 15, 34)" : "rgba(255, 255, 255, 0.0)",
 			// objectFit: "cover",
 			...style,
 		}}

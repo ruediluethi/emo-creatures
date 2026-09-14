@@ -1,5 +1,5 @@
 import { useDroppable } from "@dnd-kit/core";
-import CardFace from "./CardFace.jsx";
+import CardFace, { CARD_HEIGHT, CARD_WIDTH } from "./CardFace.jsx";
 import PlayerFieldCard from "./PlayerFieldCard.jsx";
 
 /**
@@ -13,7 +13,7 @@ export default function Field({ cards, previewCard = null, attackingCardId = nul
   const { setNodeRef, isOver } = useDroppable({ id: "field" });
 
   return (
-    <div ref={setNodeRef} className="flex min-h-[150px] w-full items-start justify-center">
+    <div ref={setNodeRef} className={`flex w-full items-start justify-center`}>
       <div
         className="flex gap-3 rounded-2xl px-4 py-3"
         style={{
@@ -26,7 +26,10 @@ export default function Field({ cards, previewCard = null, attackingCardId = nul
         }}
       >
         {cards.length === 0 && !previewCard && (
-          <div className="flex h-[134px] w-[220px] items-center justify-center rounded-xl border border-dashed border-white/10 text-xs text-white/25">
+          <div
+            className="flex items-center justify-center rounded-xl border border-dashed border-white/10 text-xs text-black/25"
+            style={{ width: `${CARD_WIDTH}px`, height: `${CARD_HEIGHT}px` }}
+          >
             Karte hierher ziehen
           </div>
         )}
