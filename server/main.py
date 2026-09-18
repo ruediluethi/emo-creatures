@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -8,7 +8,7 @@ from pydantic import BaseModel
 import random
 
 from server import Game, Repository
-from server.models import CardsPool, Player
+from server.models import Bot, CardsPool, Player
 
 # start server in karten/
 # uvicorn server.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir server
@@ -40,19 +40,19 @@ class NewGameRequest(BaseModel):
 class NewGameResponse(BaseModel):
     game_id: str
 @app.post("/game/new", response_model=NewGameResponse)
-def new_game(payload: NewGameRequest):
+def new_game(payload: NewGameRequest, idempotency_key: str | None = Header(default=None, alias="Idempotency-Key")):
     player_name = payload.player_name.strip()
     if not player_name:
         raise HTTPException(status_code=400, detail="player_name is required")
 
-    random.seed(42)
+    def create_game() -> Game:
+        random.seed(42)
 
-    player_a = Player(player_name, CardsPool.create_random_deck(10))
-    player_b = Player("Bot", CardsPool.create_random_deck(10))
-    game = Game(player_a, player_b)
-    repo.save(game)
+        player_a = Player(player_name, CardsPool.create_random_deck(10))
+        player_b = Bot("Bot", CardsPool.create_random_deck(10))
+        return Game(player_a, player_b)
 
-    print(game)
+    game = repo.get_or_create_new_game(create_game, idempotency_key=idempotency_key)
 
     return {"game_id": game.game_id}
 
@@ -63,22 +63,10 @@ def get_player_hand(game_id: str):
         raise HTTPException(status_code=404, detail="Game not found")
 
     return {
-        "hand": game.player_a.hand,
-        "field": game.player_a.field,
+        "hand": game.current_player.hand,
+        "field": game.current_player.field,
     }
 
-@app.get("/game/{game_id}/draw")
-def draw_card(game_id: str):
-    game = repo.get(game_id)
-    if game is None:
-        raise HTTPException(status_code=404, detail="Game not found")
-
-    card = game.player_a.draw(1)
-    return {
-        "hand": game.player_a.hand, 
-        "field": game.player_a.field, 
-        "drawn_card": card
-    }
 
 @app.get("/game/{game_id}/play-creature/{card_id}")
 def play_creature(game_id: str, card_id: str):
@@ -91,24 +79,39 @@ def play_creature(game_id: str, card_id: str):
         raise HTTPException(status_code=404, detail="Creature not found")
 
     return {
-        "hand": game.player_a.hand,
-        "field": game.player_a.field,
+        "hand": game.current_player.hand,
+        "field": game.current_player.field,
     }
 
-# @app.get("/hand", response_model=NewGameResponse)
-# def get_players_hand(payload: NewGameRequest):
-#     player_name = payload.player_name.strip()
-#     if not player_name:
-#         raise HTTPException(status_code=400, detail="player_name is required")
 
-#     # Retrieve the game for the player
-#     game = repo.get_by_player_name(player_name)
-#     if not game:
-#         raise HTTPException(status_code=404, detail="Game not found")
+@app.get("/game/{game_id}/attack/{attacker_id}/{target_id}")
+def attack(game_id: str, attacker_id: str, target_id: str):
+    game = repo.get(game_id)
+    if game is None:
+        raise HTTPException(status_code=404, detail="Game not found")
 
-#     hand = game.get_hand_for_player(player_name)
-#     return {"game_id": game.game_id, "hand": hand}
+    game.attack(attacker_id, target_id, 0)
 
+    return {
+        "field": game.current_player.field,
+        "opponent_field": game.opponent_player.field,
+    }
+
+
+@app.get("/game/{game_id}/end-turn")
+def end_turn(game_id: str):
+    game = repo.get(game_id)
+    if game is None:
+        raise HTTPException(status_code=404, detail="Game not found")
+
+    game.end_turn()
+
+    
+    return {
+        "hand": game.current_player.hand,
+        "field": game.current_player.field,
+        "opponent_field": game.opponent_player.field,
+    }
 
 if FRONTEND_DIST.exists():
     app.mount("/assets", StaticFiles(directory=str(FRONTEND_DIST / "assets")), name="assets")

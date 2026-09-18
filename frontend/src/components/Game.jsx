@@ -28,6 +28,11 @@ async function fetchAction(gameId, action) {
 				name: creature.card_template.name,
 				imageUrl: `/media/cards/${creature.card_template.index.toString().padStart(3, "0")}_${creature.card_template.name}.png`,
 			})),
+			(data.opponent_field ?? []).map((creature) => ({ 
+				id: creature.instance_id,
+				name: creature.card_template.name,
+				imageUrl: `/media/cards/${creature.card_template.index.toString().padStart(3, "0")}_${creature.card_template.name}.png`,
+			})),
 		];
 	} catch (err) {
 		console.error(err);
@@ -81,15 +86,19 @@ export default function Game({ gameId, playerName }) {
 		useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 8 } })
 	);
 
-	const handleDraw = () => {
-		fetchAction(gameId, "draw").then(([hand, field]) => {
+	// const handleDraw = () => {
+	// 	fetchAction(gameId, "draw").then(([hand, field]) => {
+	// 		setHand(hand);
+	// 		setField(field);
+	// 	});
+	// };
+
+	const handleEndTurn = () => {
+		fetchAction(gameId, "end-turn").then(([hand, field, opponentField]) => {
 			setHand(hand);
 			setField(field);
+			setOpponentField(opponentField);
 		});
-	};
-
-	const handleDebugAddOpponentCard = () => {
-		setOpponentField((prev) => [...prev, drawRandomCard()]);
 	};
 
 	const handleDragStart = (event) => {
@@ -102,7 +111,7 @@ export default function Game({ gameId, playerName }) {
 	// beim Angreifen (sonst würde sie kurz aufblitzen, während man mit
 	// einer Feldkarte über das eigene Feld startet).
 	const handleDragOver = (event) => {
-		setIsOverOpponentCard(event.over?.id?.startsWith("opponent-card") ?? false);
+		setIsOverOpponentCard(event.over?.id?.startsWith("opponent-") ?? false);
 		if (activeSource !== "handCard") {
 			setIsOverField(false);
 			return;
@@ -120,6 +129,8 @@ export default function Game({ gameId, playerName }) {
 		if (!over) return;
 
 		if (source === "handCard" && over.id === "field") {
+
+
 			const card = hand.find((c) => c.id === active.id);
 			if (!card) return;
 			// set it hard first
@@ -135,8 +146,16 @@ export default function Game({ gameId, playerName }) {
 
 		if (source === "playerFieldCard" && over.data.current?.type === "opponentCreature") {
 			const targetId = over.data.current.card.id;
+			// remove it from the field for now
+			setField((prev) => prev.filter((c) => c.id !== active.id));
+			// animation
 			setAttackFlash({ attackerId: active.id, targetId });
 			window.setTimeout(() => setAttackFlash(null), 320);
+
+			fetchAction(gameId, "attack/" + active.id + "/" + targetId).then(([hand, field, opponentField]) => {
+				setField(field);
+				setOpponentField(opponentField);
+			});
 		}
 	};
 
@@ -182,11 +201,11 @@ export default function Game({ gameId, playerName }) {
 				<div className="flex items-end justify-start">
 					<Hand cards={hand} />
 				</div>
-				<DeckButton onDraw={handleDraw} />
+				{/* <DeckButton onDraw={handleDraw} /> */}
 			</div>
 
 			<div className="fixed top-0 left-1/2 z-20 flex -translate-x-1/2 items-end justify-center gap-6 px-6 pt-1">
-				<DebugAddOpponentCardButton onAdd={handleDebugAddOpponentCard} />
+				<DebugAddOpponentCardButton onAdd={handleEndTurn} />
 			</div>
 
 			<DragOverlay dropAnimation={null}>

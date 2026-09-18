@@ -1,16 +1,26 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Game from "./components/Game.jsx";
 
 export const API_BASE = import.meta.env.DEV ? "http://127.0.0.1:8000" : "";
 
+let pendingNewGameRequestId = null;
+
+function getPendingNewGameRequestId() {
+  if (pendingNewGameRequestId === null) {
+    pendingNewGameRequestId = crypto.randomUUID();
+  }
+
+  return pendingNewGameRequestId;
+}
+
 export default function App() {
-  const [playerName, setPlayerName] = useState("");
+  const [playerName, setPlayerName] = useState("Test");
   const [gameId, setGameId] = useState(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleCreateGame(event) {
-    event.preventDefault();
+    // event.preventDefault();
 
     const trimmedName = playerName.trim();
     if (!trimmedName) {
@@ -28,11 +38,10 @@ export default function App() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Idempotency-Key": getPendingNewGameRequestId(),
         },
         body: JSON.stringify({ player_name: trimmedName }),
       });
-
-      console.log(response);
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
@@ -48,9 +57,16 @@ export default function App() {
     }
   }
 
+  useEffect(() => {
+    if (gameId) return;
+    handleCreateGame();
+  }, [gameId]);
+
   if (gameId) {
     return <Game gameId={gameId} playerName={playerName} />;
   }
+
+
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#0b0512] p-6 text-white">

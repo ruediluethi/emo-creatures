@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 from .card import Card
 from .creature import Creature
+
+if TYPE_CHECKING:
+    from server.game import Game
 
 
 @dataclass
@@ -16,6 +20,9 @@ class Player:
     def __post_init__(self) -> None:
         # self.hand = self.draw(3)
         self.draw(3)
+
+    def on_turn_started(self, game: Game) -> None:
+        pass
 
     def draw(self, count: int = 1) -> list[Card]:
         drawn: list[Card] = []
